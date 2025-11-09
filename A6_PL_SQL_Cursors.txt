@@ -1,0 +1,56 @@
+-- ========================================
+-- Step 0: Create Tables
+-- ========================================
+CREATE TABLE IF NOT EXISTS O_RollCall (
+    Roll_no INT PRIMARY KEY,
+    Name VARCHAR(50)
+);
+
+CREATE TABLE IF NOT EXISTS N_RollCall (
+    Roll_no INT PRIMARY KEY,
+    Name VARCHAR(50)
+);
+
+-- ========================================
+-- Step 1: Insert Sample Data
+-- ========================================
+INSERT INTO O_RollCall (Roll_no, Name) VALUES
+(1, 'Aarav'),
+(2, 'Meera');
+
+INSERT INTO N_RollCall (Roll_no, Name) VALUES
+(2, 'Meera'),
+(3, 'Raj'),
+(4, 'Sara');
+
+-- ========================================
+-- Step 2: PL/pgSQL block with parameterized cursor
+-- ========================================
+DO $$
+DECLARE
+    -- Cursor declaration with parameter
+    CURSOR c_new_roll(p_roll_no INT) FOR
+        SELECT Roll_no, Name
+        FROM N_RollCall
+        WHERE Roll_no >= p_roll_no;
+    
+    rec RECORD;
+BEGIN
+    -- Open cursor with parameter 1
+    FOR rec IN c_new_roll(1) LOOP
+        -- Check if Roll_no already exists in O_RollCall
+        IF NOT EXISTS (SELECT 1 FROM O_RollCall WHERE Roll_no = rec.Roll_no) THEN
+            -- Insert new record
+            INSERT INTO O_RollCall (Roll_no, Name)
+            VALUES (rec.Roll_no, rec.Name);
+        END IF;
+    END LOOP;
+
+    RAISE NOTICE 'Merge completed successfully.';
+END
+$$ LANGUAGE plpgsql;
+
+-- ========================================
+-- Step 3: Check merged table
+-- ========================================
+SELECT * FROM O_RollCall;
