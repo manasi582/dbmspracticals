@@ -1,0 +1,70 @@
+-- Ensure the tables exist
+CREATE TABLE IF NOT EXISTS Borrower (
+    Roll_no INT PRIMARY KEY,
+    Name VARCHAR(50),
+    DateofIssue DATE,
+    NameofBook VARCHAR(50),
+    Status CHAR(1) -- 'I' for issued, 'R' for returned
+);
+
+CREATE TABLE IF NOT EXISTS Fine (
+    Roll_no INT,
+    Date_returned DATE,
+    Amt NUMERIC
+);
+
+-- PL/pgSQL block
+DO $$
+DECLARE
+    v_roll_no INT := 1;                 -- Replace with user input
+    v_nameofbook VARCHAR := 'DS Book';  -- Replace with user input
+    v_dateofissue DATE;
+    v_status CHAR(1);
+    v_days INT;
+    v_fine_amt NUMERIC;
+    
+    ex_borrower_not_found EXCEPTION;   -- User-defined exception
+BEGIN
+    -- Fetch Borrower details
+    SELECT DateofIssue, Status
+    INTO v_dateofissue, v_status
+    FROM Borrower
+    WHERE Roll_no = v_roll_no AND NameofBook = v_nameofbook;
+    
+    IF NOT FOUND THEN
+        RAISE ex_borrower_not_found;
+    END IF;
+    
+    -- Calculate number of days since issue
+    v_days := CURRENT_DATE - v_dateofissue;
+    
+    -- Calculate fine based on days
+    IF v_days < 15 THEN
+        v_fine_amt := 0;
+    ELSIF v_days <= 30 THEN
+        v_fine_amt := v_days * 5;
+    ELSE
+        v_fine_amt := v_days * 50;
+    END IF;
+    
+    -- Update Borrower status to 'R' (Returned)
+    UPDATE Borrower
+    SET Status = 'R'
+    WHERE Roll_no = v_roll_no AND NameofBook = v_nameofbook;
+    
+    -- Insert fine into Fine table if fine > 0
+    IF v_fine_amt > 0 THEN
+        INSERT INTO Fine(Roll_no, Date_returned, Amt)
+        VALUES (v_roll_no, CURRENT_DATE, v_fine_amt);
+    END IF;
+    
+    RAISE NOTICE 'Book returned successfully. Fine = %', v_fine_amt;
+
+EXCEPTION
+    WHEN ex_borrower_not_found THEN
+        RAISE NOTICE 'Error: Borrower with Roll_no % and Book % not found.', v_roll_no, v_nameofbook;
+    WHEN OTHERS THEN
+        RAISE NOTICE 'An unexpected error occurred: %', SQLERRM;
+END
+$$ LANGUAGE plpgsql;
+
