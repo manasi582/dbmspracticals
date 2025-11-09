@@ -1,0 +1,91 @@
+###pip install mysql-connector-python###
+
+import mysql.connector
+
+# ===============================
+# Step 0: Connect to Database
+# ===============================
+conn = mysql.connector.connect(
+    host='localhost',
+    user='your_username',
+    password='your_password',
+    database='your_database'
+)
+
+cursor = conn.cursor()
+
+# ===============================
+# Step 1: Create Sample Table (if not exists)
+# ===============================
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS Students (
+    Roll_no INT PRIMARY KEY,
+    Name VARCHAR(50),
+    Marks INT
+)
+""")
+
+# ===============================
+# Step 2: Define Functions
+# ===============================
+def add_student():
+    roll = int(input("Enter Roll No: "))
+    name = input("Enter Name: ")
+    marks = int(input("Enter Marks: "))
+    cursor.execute("INSERT INTO Students (Roll_no, Name, Marks) VALUES (%s, %s, %s)", (roll, name, marks))
+    conn.commit()
+    print("Student added successfully!\n")
+
+def delete_student():
+    roll = int(input("Enter Roll No to delete: "))
+    cursor.execute("DELETE FROM Students WHERE Roll_no = %s", (roll,))
+    conn.commit()
+    print("Student deleted successfully!\n")
+
+def edit_student():
+    roll = int(input("Enter Roll No to edit: "))
+    name = input("Enter new Name: ")
+    marks = int(input("Enter new Marks: "))
+    cursor.execute("UPDATE Students SET Name=%s, Marks=%s WHERE Roll_no=%s", (name, marks, roll))
+    conn.commit()
+    print("Student updated successfully!\n")
+
+def view_students():
+    cursor.execute("SELECT * FROM Students")
+    rows = cursor.fetchall()
+    print("\nRoll No | Name       | Marks")
+    print("----------------------------")
+    for row in rows:
+        print(f"{row[0]:<7} | {row[1]:<10} | {row[2]}")
+    print()
+
+# ===============================
+# Step 3: Menu Loop
+# ===============================
+while True:
+    print("1. Add Student")
+    print("2. Delete Student")
+    print("3. Edit Student")
+    print("4. View Students")
+    print("5. Exit")
+    choice = input("Enter choice: ")
+
+    if choice == '1':
+        add_student()
+    elif choice == '2':
+        delete_student()
+    elif choice == '3':
+        edit_student()
+    elif choice == '4':
+        view_students()
+    elif choice == '5':
+        print("Exiting...")
+        break
+    else:
+        print("Invalid choice! Please try again.\n")
+
+# ===============================
+# Step 4: Close connection
+# ===============================
+cursor.close()
+conn.close()
