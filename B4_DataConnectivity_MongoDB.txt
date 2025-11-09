@@ -1,0 +1,78 @@
+###pip install pymongo###
+from pymongo import MongoClient
+
+# ===============================
+# Step 0: Connect to MongoDB
+# ===============================
+client = MongoClient("mongodb://localhost:27017/")  # Adjust URI if needed
+db = client["SchoolDB"]  # Database
+collection = db["Students"]  # Collection
+
+# ===============================
+# Step 1: Define Functions
+# ===============================
+def add_student():
+    roll = int(input("Enter Roll No: "))
+    name = input("Enter Name: ")
+    marks = int(input("Enter Marks: "))
+    
+    # Insert into MongoDB
+    collection.insert_one({"Roll_no": roll, "Name": name, "Marks": marks})
+    print("Student added successfully!\n")
+
+def delete_student():
+    roll = int(input("Enter Roll No to delete: "))
+    
+    result = collection.delete_one({"Roll_no": roll})
+    if result.deleted_count > 0:
+        print("Student deleted successfully!\n")
+    else:
+        print("No student found with this Roll No.\n")
+
+def edit_student():
+    roll = int(input("Enter Roll No to edit: "))
+    name = input("Enter new Name: ")
+    marks = int(input("Enter new Marks: "))
+    
+    result = collection.update_one({"Roll_no": roll}, {"$set": {"Name": name, "Marks": marks}})
+    if result.matched_count > 0:
+        print("Student updated successfully!\n")
+    else:
+        print("No student found with this Roll No.\n")
+
+def view_students():
+    print("\nRoll No | Name       | Marks")
+    print("----------------------------")
+    for student in collection.find():
+        print(f"{student['Roll_no']:<7} | {student['Name']:<10} | {student['Marks']}")
+    print()
+
+# ===============================
+# Step 2: Menu Loop
+# ===============================
+while True:
+    print("1. Add Student")
+    print("2. Delete Student")
+    print("3. Edit Student")
+    print("4. View Students")
+    print("5. Exit")
+    choice = input("Enter choice: ")
+
+    if choice == '1':
+        add_student()
+    elif choice == '2':
+        delete_student()
+    elif choice == '3':
+        edit_student()
+    elif choice == '4':
+        view_students()
+    elif choice == '5':
+        print("Exiting...")
+        break
+    else:
+        print("Invalid choice! Please try again.\n")
+
+# ===============================
+# Step 3: Close connection
+# ===============================
+client.close()
