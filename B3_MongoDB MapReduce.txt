@@ -1,0 +1,59 @@
+// Step 0: Setup Collection
+use collegeDB
+
+db.students.insertMany([
+  { name: "Aarav", age: 20, course: "Computer Science", marks: 85 },
+  { name: "Meera", age: 22, course: "IT", marks: 91 },
+  { name: "Raj", age: 21, course: "Electronics", marks: 76 },
+  { name: "Sara", age: 20, course: "Computer Science", marks: 88 },
+  { name: "Riya", age: 23, course: "IT", marks: 95 },
+  { name: "Karan", age: 22, course: "Computer Science", marks: 80 }
+])
+
+// Step 1: Define the Map Function
+// Emits key as course, value as marks
+var mapFunction = function() {
+    emit(this.course, this.marks);
+}
+
+// Step 2: Define the Reduce Function
+// Sums up all marks for each course
+var reduceFunction = function(key, values) {
+    return Array.sum(values);
+}
+
+// Step 3: Execute MapReduce
+db.students.mapReduce(
+    mapFunction,
+    reduceFunction,
+    { out: "course_total_marks" }
+)
+
+// Step 4: View MapReduce Output
+db.course_total_marks.find()
+
+// Step 5 (Optional): Average marks per course using MapReduce
+var mapAvg = function() { emit(this.course, { sum: this.marks, count: 1 }); }
+var reduceAvg = function(key, values) {
+    var result = { sum: 0, count: 0 };
+    values.forEach(function(v) {
+        result.sum += v.sum;
+        result.count += v.count;
+    });
+    return result;
+}
+var finalizeAvg = function(key, value) {
+    return value.sum / value.count;
+}
+
+db.students.mapReduce(
+    mapAvg,
+    reduceAvg,
+    {
+        out: "course_avg_marks",
+        finalize: finalizeAvg
+    }
+)
+
+// View average marks per course
+db.course_avg_marks.find()
