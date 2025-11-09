@@ -1,0 +1,58 @@
+// Step 0: Setup Collection
+use collegeDB
+
+db.students.insertMany([
+  { name: "Aarav", age: 20, course: "Computer Science", marks: 85 },
+  { name: "Meera", age: 22, course: "IT", marks: 91 },
+  { name: "Raj", age: 21, course: "Electronics", marks: 76 },
+  { name: "Sara", age: 20, course: "Computer Science", marks: 88 },
+  { name: "Riya", age: 23, course: "IT", marks: 95 },
+  { name: "Karan", age: 22, course: "Computer Science", marks: 80 }
+])
+
+// Step 1: Aggregation Queries
+
+// Total students in each course
+db.students.aggregate([
+  { $group: { _id: "$course", total_students: { $sum: 1 } } }
+])
+
+// Average marks in each course
+db.students.aggregate([
+  { $group: { _id: "$course", avg_marks: { $avg: "$marks" } } }
+])
+
+// Students with marks > 85, sorted by marks descending
+db.students.aggregate([
+  { $match: { marks: { $gt: 85 } } },
+  { $sort: { marks: -1 } }
+])
+
+// Count of students in age groups
+db.students.aggregate([
+  { $bucket: { 
+      groupBy: "$age",
+      boundaries: [19, 21, 23, 25],
+      default: "Other",
+      output: { count: { $sum: 1 } }
+  } }
+])
+
+// Step 2: Indexing
+
+// Create an index on marks
+db.students.createIndex({ marks: 1 })
+
+// Create a compound index on course and age
+db.students.createIndex({ course: 1, age: -1 })
+
+// Verify indexes
+db.students.getIndexes()
+
+// Step 3: Queries using Indexes
+
+// Find students with marks > 85 (uses index on marks)
+db.students.find({ marks: { $gt: 85 } })
+
+// Find IT students aged above 21 (uses compound index)
+db.students.find({ course: "IT", age: { $gt: 21 } })
