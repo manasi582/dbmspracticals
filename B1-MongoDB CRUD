@@ -1,0 +1,42 @@
+// Create / Insert Operations
+use collegeDB
+
+db.students.insertMany([
+  { name: "Aarav", age: 20, course: "Computer Science", marks: 85 },
+  { name: "Meera", age: 22, course: "IT", marks: 91 },
+  { name: "Raj", age: 21, course: "Electronics", marks: 76 },
+  { name: "Sara", age: 20, course: "Computer Science", marks: 88 }
+])
+
+// Read Operations
+db.students.find()
+db.students.find().pretty()
+db.students.find({ course: "Computer Science" })
+db.students.find({ marks: { $gt: 80 } })
+
+// Update Operations
+db.students.updateOne(
+  { name: "Raj" },
+  { $set: { course: "Mechanical" } }
+)
+
+db.students.updateMany(
+  { course: "Computer Science" },
+  { $inc: { marks: 5 } }
+)
+
+// Save Method Example (insert or update)
+db.students.save({ _id: ObjectId("replace_with_existing_id"), name: "Aarav", age: 21, course: "AI", marks: 90 })
+
+// Delete Operations
+db.students.deleteOne({ name: "Raj" })
+db.students.deleteMany({ marks: { $lt: 80 } })
+
+// Logical Operators
+db.students.find({
+  $or: [ { course: "IT" }, { course: "Computer Science" } ]
+})
+
+db.students.find({
+  $and: [ { course: "Computer Science" }, { marks: { $gt: 85 } } ]
+})
