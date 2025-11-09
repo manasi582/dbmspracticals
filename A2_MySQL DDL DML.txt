@@ -1,0 +1,98 @@
+-- ========================================
+-- Step 0: Create Database
+-- ========================================
+CREATE DATABASE CollegeDB;
+USE CollegeDB;
+
+-- ========================================
+-- Step 1: Create Tables with Constraints
+-- ========================================
+CREATE TABLE Departments (
+    dept_id INT PRIMARY KEY,
+    dept_name VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE Professors (
+    prof_id INT PRIMARY KEY,
+    prof_name VARCHAR(50) NOT NULL,
+    dept_id INT,
+    CONSTRAINT fk_dept FOREIGN KEY (dept_id) REFERENCES Departments(dept_id)
+);
+
+CREATE TABLE Students (
+    student_id INT PRIMARY KEY,
+    student_name VARCHAR(50) NOT NULL,
+    age INT CHECK (age >= 18),
+    dept_id INT,
+    CONSTRAINT fk_student_dept FOREIGN KEY (dept_id) REFERENCES Departments(dept_id)
+);
+
+-- ========================================
+-- Step 2: Create Sequence
+-- ========================================
+CREATE SEQUENCE seq_student_id START WITH 1 INCREMENT BY 1;
+
+-- ========================================
+-- Step 3: Create View
+-- ========================================
+CREATE VIEW StudentDetails AS
+SELECT s.student_id, s.student_name, s.age, d.dept_name
+FROM Students s
+JOIN Departments d ON s.dept_id = d.dept_id;
+
+-- ========================================
+-- Step 4: Create Index
+-- ========================================
+CREATE INDEX idx_student_name ON Students(student_name);
+
+-- ========================================
+-- Step 5: Insert Sample Data (DML)
+-- ========================================
+INSERT INTO Departments VALUES (1, 'Computer Science');
+INSERT INTO Departments VALUES (2, 'IT');
+INSERT INTO Departments VALUES (3, 'Electronics');
+
+INSERT INTO Professors VALUES (101, 'Dr. Sharma', 1);
+INSERT INTO Professors VALUES (102, 'Dr. Mehta', 2);
+INSERT INTO Professors VALUES (103, 'Dr. Kapoor', 3);
+
+INSERT INTO Students VALUES (1, 'Aarav', 20, 1);
+INSERT INTO Students VALUES (2, 'Meera', 22, 2);
+INSERT INTO Students VALUES (3, 'Raj', 21, 3);
+INSERT INTO Students VALUES (4, 'Sara', 20, 1);
+INSERT INTO Students VALUES (5, 'Riya', 23, 2);
+
+-- ========================================
+-- Step 6: SQL Queries (DML examples)
+-- ========================================
+-- 1. Select all students
+SELECT * FROM Students;
+
+-- 2. Select students in Computer Science
+SELECT * FROM Students WHERE dept_id = 1;
+
+-- 3. Update student age
+UPDATE Students SET age = 21 WHERE student_name = 'Aarav';
+
+-- 4. Delete a student
+DELETE FROM Students WHERE student_name = 'Raj';
+
+-- 5. Count students per department
+SELECT dept_id, COUNT(*) AS student_count FROM Students GROUP BY dept_id;
+
+-- 6. Order students by age descending
+SELECT * FROM Students ORDER BY age DESC;
+
+-- 7. Insert a new student using sequence
+INSERT INTO Students(student_id, student_name, age, dept_id)
+VALUES (NEXT VALUE FOR seq_student_id, 'Karan', 22, 1);
+
+-- 8. Join students with departments
+SELECT s.student_name, d.dept_name
+FROM Students s JOIN Departments d ON s.dept_id = d.dept_id;
+
+-- 9. Use view to select details
+SELECT * FROM StudentDetails;
+
+-- 10. Select students with age > 21
+SELECT * FROM Students WHERE age > 21;
